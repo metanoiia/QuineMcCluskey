@@ -5,6 +5,7 @@
 #include <string>
 #include <list>
 #include <algorithm>
+#include <cmath>
 #include "impl.h"
 
 
@@ -16,21 +17,21 @@ private:
     std::list < std::shared_ptr <Impl> > m_mdnf;
 
     uint16_t m_numPatch;
+    int m_base;
 
     void makeDDNF();
     void absorbDDNF();
 
 public:
-    DNF(std::string strData);
+    DNF( std::string strData );
     ~DNF();
 
     void minimize();
-
+    void print( std::ostream & stream );
 
     std::list < std::shared_ptr <Impl> > getMDNF();
-//    void print(std::ostream & stream);
 
-
+    friend std::string decToBinStr( int a, int len );
 };
 
 //const std::string VARIABLES = "xyzuw";

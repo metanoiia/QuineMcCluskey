@@ -1,12 +1,30 @@
-#include <iostream>
 #include "dnf.h"
-#include <vector>
+#include <fstream>
+
 
 int main()
 {
-    DNF  dnf(std::string("1111101-11-00001"));
+    std::ifstream fin( "scale.txt" );
+
+    if( !fin.is_open() )
+        return -1;
+
+    std::string inData;
+
+    fin >> inData;
+    fin.close();
+
+    DNF dnf( inData );
+
     dnf.minimize();
-    std::list < std::shared_ptr <Impl> > mdnf = dnf.getMDNF();
-    //
+
+    std::ofstream fout( "mdnf.txt", std::ios_base::trunc );
+
+    if( !fout.is_open() )
+        return -1;
+
+    dnf.print( fout );
+    fout.close();
+
     return 0;
 }

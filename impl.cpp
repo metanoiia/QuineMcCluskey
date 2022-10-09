@@ -1,19 +1,20 @@
 #include "impl.h"
 
 Impl::Impl( unsigned int num )
+    : m_num( num ),
+      m_ind( count( m_num ) ),
+      m_P( 0 ),
+      m_Pw( false ),
+      m_isUndefined( false )
 {
-    m_num  = num;
-    m_ind = count(m_num);
-    m_P = 0;
-    m_Pw = false;
-    m_isUndefined = false;
+
 }
 
 int Impl::count( unsigned int num )
 {
     unsigned int count = 0;
 
-    for (; num; count++)
+    for ( ; num; count++ )
         num &= ( num - 1 );
 
     return count;

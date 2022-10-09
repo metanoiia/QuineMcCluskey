@@ -1,2 +1,2 @@
 # QuineMcCluskey
- Lab1 MO Quine Mc Cluskey method
+Quine Mc Cluskey method implementation

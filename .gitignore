@@ -32,6 +32,9 @@ Makefile*
 *.qm
 *.prl
 
+*debug*
+*release*
+
 # Qt unit tests
 target_wrapper.*
 
@@ -52,3 +55,5 @@ compile_commands.json
 *creator.user*
 
 *_qmlcache.qrc
+
+*.exe

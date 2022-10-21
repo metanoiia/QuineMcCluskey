@@ -12,6 +12,7 @@ private:
 
     bool m_Pw;
     bool m_isUndefined;
+    bool m_isBasic;
 
 public:
     Impl(unsigned int num);
@@ -22,11 +23,14 @@ public:
     unsigned int getP();
     bool getPw();
 
+    bool isBasic();
     bool isUndefined();
 
     void setPw( bool val );
     void setP( unsigned int val );
     void setUndefined( bool val );
+    void setBasic( bool val );
+
 
     static std::shared_ptr <Impl> patch( std::shared_ptr <Impl> & first, std::shared_ptr <Impl> & second );
     static int count( unsigned int num );

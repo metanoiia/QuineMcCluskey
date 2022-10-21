@@ -5,9 +5,20 @@ Impl::Impl( unsigned int num )
       m_ind( count( m_num ) ),
       m_P( 0 ),
       m_Pw( false ),
-      m_isUndefined( false )
+      m_isUndefined( false ),
+      m_isBasic( false )
 {
 
+}
+
+bool Impl::isBasic()
+{
+    return m_isBasic;
+}
+
+void Impl::setBasic( bool val )
+{
+    m_isBasic = val;
 }
 
 int Impl::count( unsigned int num )

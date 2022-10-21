@@ -1,7 +1,6 @@
 #include "dnf.h"
 #include <fstream>
 
-
 int main()
 {
     std::ifstream fin( "scale.txt" );

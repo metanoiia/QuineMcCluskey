@@ -67,25 +67,97 @@ void DNF::absorbDDNF()
     if( m_data.empty() )
         return;
 
-    std::list < std::shared_ptr <Impl> > definedConstituents;
+    std::vector < std::shared_ptr <Impl> > definedConstituents;
+    std::vector < std::shared_ptr <Impl> > ddnfVec;
+
+    std::copy(  m_ddnf.begin(), m_ddnf.end(), std::back_inserter( ddnfVec ) );
 
     std::copy_if( m_data.begin(), m_data.end(),
                  std::back_inserter( definedConstituents ),
                  [&] ( std::shared_ptr <Impl> impl ){ return !( impl->isUndefined() ); } );
 
-    for( std::shared_ptr <Impl> cons : definedConstituents )
+    std::vector < std::vector < bool > > absorbedMatrix( definedConstituents.size(),
+                                                         std::vector < bool > ( m_ddnf.size(), false ) ); //implication matrix
+
+    for( size_t i = 0; i < definedConstituents.size(); i++ ) //matrix initializing loop
     {
-        for( std::shared_ptr <Impl> impl : m_ddnf )
+        std::shared_ptr <Impl> cons = definedConstituents.at( i );
+        uint32_t basicCnt = 0;
+
+        for ( size_t j = 0; j < ddnfVec.size(); j++ )
         {
+            std::shared_ptr <Impl> impl = ddnfVec.at( j );
+
             if( ( cons->getNum() & ~( impl->getP() ) ) == impl->getNum() )
             {
-                if( std::find( m_mdnf.begin(), m_mdnf.end(), impl ) == m_mdnf.end() )
-                    m_mdnf.push_back( impl );
-
-                break;
+                absorbedMatrix.at( i ).at( j ) = true;
+                basicCnt++;
             }
         }
+
+        if( basicCnt == 1 )
+        {
+            std::vector < bool >::iterator absorbedIt = std::find( absorbedMatrix.at( i ).begin(),
+                                                           absorbedMatrix.at( i ).end(),
+                                                           true);
+
+            int index = absorbedIt - absorbedMatrix.at( i ).begin();
+            ddnfVec.at( index )->setBasic( true );
+        }
+        else if ( !basicCnt )
+            return;
     }
+
+    for( size_t i = 0; i < absorbedMatrix.size(); i++ ) // mdnf filling loop
+    {
+        std::vector < bool > column = absorbedMatrix.at( i );
+        int basicNum = std::accumulate( column.begin(), column.end(), 0 );
+
+        if( basicNum == 1 )
+        {
+            std::vector < bool >::iterator absorbedIt = std::find( absorbedMatrix.at( i ).begin(),
+                                                           absorbedMatrix.at( i ).end(),
+                                                           true);
+
+            int index = absorbedIt - absorbedMatrix.at( i ).begin();
+
+            if( std::find( m_mdnf.begin(), m_mdnf.end(), ddnfVec.at( index ) ) == m_mdnf.end() ) //if there is no more such implicant yet
+                                m_mdnf.push_back( ddnfVec.at( index ) );
+        }
+        else
+        {
+            std::list < std::shared_ptr < Impl > > coveredImpl;
+            std::list < std::shared_ptr < Impl > >::iterator basicIt;
+
+            for( size_t j = 0; j < column.size(); j++ )
+            {
+                if( column.at( j ) ) //if implicant at j covered by i constituent
+                    coveredImpl.push_back( ddnfVec.at( j ) );
+            }
+
+            basicIt = std::find_if( coveredImpl.begin(), coveredImpl.end(), []( std::shared_ptr < Impl > impl ){ return impl->isBasic(); } );
+
+            if( basicIt != coveredImpl.end() ) //if there is no basic impl in this column
+            {
+                if( std::find( m_mdnf.begin(), m_mdnf.end(), *basicIt ) == m_mdnf.end() ) //if there is no more such implicant yet
+                    m_mdnf.push_back( *basicIt );
+            }
+            else
+            {
+                std::vector < bool >::iterator firstCoveredIt = std::find( column.begin(),
+                                                               column.end(),
+                                                               true);
+
+                int index = firstCoveredIt - column.begin();
+
+                if( std::find( m_mdnf.begin(), m_mdnf.end(), ddnfVec.at( index ) ) == m_mdnf.end() ) //if there is no more such implicant yet
+                    m_mdnf.push_back( ddnfVec.at( index ) );
+            }
+
+        }
+
+    }
+
 }
 
 void DNF::minimize()

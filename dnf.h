@@ -29,6 +29,10 @@ public:
 
     void minimize();
     void print( std::ostream & stream );
+    void fit( bool direction ,
+              std::vector < std::vector < bool > > matrix,
+              std::vector < std::shared_ptr <Impl> > ddnf,
+              std::list   < std::shared_ptr < Impl > > & mdnf );
 
     std::list < std::shared_ptr < Impl > > getMDNF();
 

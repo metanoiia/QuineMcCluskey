@@ -6,7 +6,8 @@ Impl::Impl( unsigned int num )
       m_P( 0 ),
       m_Pw( false ),
       m_isUndefined( false ),
-      m_isBasic( false )
+      m_isBasic( false ),
+      m_covers( false )
 {
 
 }
@@ -54,6 +55,16 @@ bool Impl::getPw()
 bool Impl::isUndefined()
 {
     return m_isUndefined;
+}
+
+bool Impl::covers( )
+{
+    return m_covers;
+}
+
+void Impl::setCovers(bool val)
+{
+    m_covers = val;
 }
 
 void Impl::setPw( bool val )

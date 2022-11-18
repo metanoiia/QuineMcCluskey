@@ -29,16 +29,20 @@ public:
 
     void minimize();
     void print( std::ostream & stream );
-    void fit( bool direction ,
-              std::vector < std::vector < bool > > matrix,
-              std::vector < std::shared_ptr <Impl> > ddnf,
-              std::list   < std::shared_ptr < Impl > > & mdnf );
+    template<typename iter_t>
+    void fit( std::vector < std::shared_ptr <Impl> > ddnf,
+              std::list   < std::shared_ptr < Impl > > & mdnf,
+              iter_t matrIt,
+              iter_t endIt );
 
     std::list < std::shared_ptr < Impl > > getMDNF();
 
     friend std::string decToBinStr( int a, int len );
 };
 
-//const std::string VARIABLES = "xyzuw";
+void pushOneToMDNF( std::vector < bool > column,
+                    std::vector < std::shared_ptr <Impl> > ddnf,
+                    std::list   < std::shared_ptr < Impl > > & mdnf);
+
 
 #endif // DNF_H

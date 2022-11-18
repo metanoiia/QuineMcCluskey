@@ -62,46 +62,50 @@ void DNF::makeDDNF()
     }
 }
 
-
-void DNF::fit( bool direction ,
-               std::vector < std::vector < bool > > matrix,
-               std::vector < std::shared_ptr <Impl> > ddnf,
-               std::list   < std::shared_ptr < Impl > > & mdnf )
+/*
+ * finds first absorbed implicant in the column and
+ * marks corresponding impl as 'covering' (set 'covers' member to true)
+*/
+void pushOneToMDNF( std::vector < bool > column,
+                    std::vector < std::shared_ptr <Impl> > ddnf,
+                    std::list   < std::shared_ptr < Impl > > & mdnf)
 {
+    std::vector < bool >::iterator absorbedIt = std::find( column.begin(),
+                                                           column.end(),
+                                                           true);
 
-    for( int i = ( direction ) ? 0 : matrix.size() - 1;
-         ( direction ) ? i < static_cast < int > ( matrix.size() ) : i >= 0;
-         ( direction ) ? i++ : i-- )
+    int index = absorbedIt - column.begin(); //get index of basic impl
 
-
+    if( std::find( mdnf.begin(), mdnf.end(), ddnf.at( index ) ) == mdnf.end() ) //if there is no more such implicant yet
     {
-        std::vector < bool > column = matrix.at( i );
-        int basicNum = std::accumulate( column.begin(), column.end(), 0 );
+        mdnf.push_back( ddnf.at( index ) );
+        ddnf.at( index )->setCovers( true );
+    }
+}
 
-        if( basicNum == 1 )
-        {
-            std::vector < bool >::iterator absorbedIt = std::find( matrix.at( i ).begin(),
-                                                                   matrix.at( i ).end(),
-                                                                   true);
+template<typename iter_t>
+void DNF::fit( std::vector < std::shared_ptr <Impl> > ddnf,
+               std::list   < std::shared_ptr < Impl > > & mdnf,
+               iter_t matrIt,
+               iter_t endIt )
+{
+    for( ; matrIt != endIt; matrIt++ )
+    {
+        std::vector < bool > column = *matrIt;
+        int absorbedNum = std::accumulate( column.begin(), column.end(), 0 );
 
-            int index = absorbedIt - matrix.at( i ).begin();
-
-            if( std::find( mdnf.begin(), mdnf.end(), ddnf.at( index ) ) == mdnf.end() ) //if there is no more such implicant yet
-            {
-                mdnf.push_back( ddnf.at( index ) );
-                ddnf.at( index )->setCovers( true );
-            }
-        }
+        if( absorbedNum == 1 ) // there is only one absorbed impl inthis column
+            pushOneToMDNF( column, ddnf, mdnf );
         else
         {
             std::list < std::shared_ptr < Impl > > coveredImpl;
             std::list < std::shared_ptr < Impl > >::iterator basicIt;
             std::list < std::shared_ptr < Impl > >::iterator coveringIt;
 
-            for( size_t j = 0; j < column.size(); j++ )
+            for( size_t i = 0; i < column.size(); i++ )
             {
-                if( column.at( j ) ) //if implicant at j covered by i constituent
-                    coveredImpl.push_back( ddnf.at( j ) );
+                if( column.at( i ) ) //if implicant at i covered by current constituent
+                    coveredImpl.push_back( ddnf.at( i ) );
             }
 
             basicIt = std::find_if( coveredImpl.begin(), coveredImpl.end(), []( std::shared_ptr < Impl > impl )
@@ -119,28 +123,12 @@ void DNF::fit( bool direction ,
             {
                 coveringIt = std::find_if( coveredImpl.begin(), coveredImpl.end(), []( std::shared_ptr < Impl > impl ) //find impl that included in the mdnf
                                                                                      { return impl->covers(); } );
+
                 if( coveringIt == coveredImpl.end() ) // if there is no impl included in the mdnf
-                {
-                    std::vector < bool >::iterator firstCoveredIt = std::find( column.begin(),
-                                                                               column.end(),
-                                                                               true);
-
-                    int index = firstCoveredIt - column.begin();
-
-                    if( std::find( mdnf.begin(), mdnf.end(), ddnf.at( index ) ) == mdnf.end() ) //if there is no more such implicant yet
-                    {
-                        mdnf.push_back( ddnf.at( index ) );
-                        ddnf.at( index )->setCovers( true );
-                    }
-
-                }
-
+                    pushOneToMDNF( column, ddnf, mdnf );
             }
-
         }
-
     }
-
 }
 
 void DNF::absorbDDNF()
@@ -195,15 +183,14 @@ void DNF::absorbDDNF()
     std::list < std::shared_ptr < Impl > > mdnfForward;
     std::list < std::shared_ptr < Impl > > mdnfReverse;
 
-    fit( 0 , absorbedMatrix , ddnfVec, mdnfReverse);
+    fit( ddnfVec, mdnfReverse, absorbedMatrix.rbegin(), absorbedMatrix.rend() );
 
     for( std::shared_ptr <Impl> & impl : ddnfVec )
         impl->setCovers( false ); //reset covers flags to check it again at the next time
 
-    fit( 1 , absorbedMatrix , ddnfVec, mdnfForward);
+    fit( ddnfVec, mdnfForward, absorbedMatrix.begin(), absorbedMatrix.end() );
 
     m_mdnf = ( ( mdnfForward.size() < mdnfReverse.size() ) ) ? std::move( mdnfForward ) : std::move( mdnfReverse );
-
 }
 
 void DNF::minimize()
